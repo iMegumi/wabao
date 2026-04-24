@@ -3,52 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>挖宝行动 - 背包地图版</title>
+  <title>Delta 挖宝行动</title>
   <style>
-    * {
-      box-sizing: border-box;
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #0b1220;
+      --panel: #111827;
+      --panel2: #0f172a;
+      --line: rgba(255,255,255,0.08);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --cell: #182233;
+      --cell2: #1d2a3d;
+      --accent: #60a5fa;
+      --gold: #f59e0b;
+      --red: #ef4444;
+      --green: #22c55e;
     }
 
     body {
       margin: 0;
       font-family: "Microsoft YaHei", Arial, sans-serif;
-      background: linear-gradient(180deg, #0f172a, #111827);
-      color: #e5e7eb;
+      background:
+        radial-gradient(circle at top, rgba(59,130,246,0.12), transparent 35%),
+        linear-gradient(180deg, #0a0f1c, #0b1220 35%, #09111d);
+      color: var(--text);
+      overflow-x: hidden;
     }
 
     .container {
-      max-width: 1380px;
+      max-width: 1500px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 18px;
     }
 
-    h1, h2, h3 {
-      margin: 0 0 12px;
-    }
+    h1, h2, h3 { margin: 0 0 10px; }
 
-    .muted {
-      color: #94a3b8;
-      font-size: 13px;
-    }
+    .muted { color: var(--muted); font-size: 13px; }
+    .small { font-size: 12px; color: var(--muted); }
 
     .top-bar {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 12px;
       margin-bottom: 16px;
     }
 
     .card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--line);
+      border-radius: 16px;
       padding: 14px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.28);
     }
 
     .main {
       display: grid;
-      grid-template-columns: 1.35fr 0.9fr;
+      grid-template-columns: 1.4fr 0.95fr;
       gap: 16px;
     }
 
@@ -62,389 +73,546 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     button {
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 10px 14px;
       cursor: pointer;
       font-size: 14px;
-      font-weight: bold;
-      transition: 0.2s;
+      font-weight: 700;
+      transition: .18s;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-      opacity: 0.95;
-    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.5;
-      transform: none;
-    }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-success { background: #10b981; color: #fff; }
+    .btn-warning { background: #f59e0b; color: #fff; }
+    .btn-danger  { background: #ef4444; color: #fff; }
+    .btn-secondary { background: #475569; color: #fff; }
 
-    .btn-primary { background: #3b82f6; color: white; }
-    .btn-success { background: #10b981; color: white; }
-    .btn-danger { background: #ef4444; color: white; }
-    .btn-warning { background: #f59e0b; color: white; }
-    .btn-secondary { background: #64748b; color: white; }
-
-    .map-wrapper {
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
       margin-top: 14px;
     }
 
-    .map-grid {
+    .hero-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .hero-box .label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .hero-box .value {
+      font-size: 22px;
+      font-weight: 900;
+      color: #f8fafc;
+    }
+
+    .value.money { color: #fbbf24; }
+    .value.safe { color: #34d399; }
+    .value.warn { color: #93c5fd; }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .warehouse-grid,
+    .bag-grid {
       display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      grid-template-rows: repeat(8, 54px);
       gap: 6px;
       background: rgba(255,255,255,0.02);
       padding: 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.06);
-      min-height: 500px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
       position: relative;
     }
 
-    .map-cell {
-      background: #1f2937;
-      border: 1px solid #334155;
+    .warehouse-grid {
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(9, 54px);
+      min-height: 560px;
+    }
+
+    .bag-grid {
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(10, 44px);
+      min-height: 520px;
+    }
+
+    .grid-cell {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)),
+        var(--cell);
+      border: 1px solid rgba(255,255,255,0.05);
       border-radius: 8px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: #94a3b8;
+      min-width: 0;
+      min-height: 0;
     }
 
-    .map-item {
+    .warehouse-item,
+    .bag-item {
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.12);
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
       padding: 6px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
+      text-align: center;
       user-select: none;
-      transition: 0.2s;
-      position: relative;
-      overflow: hidden;
+      transition: .18s;
+      min-width: 0;
     }
 
-    .map-item:hover {
+    .warehouse-item {
+      cursor: pointer;
+      background:
+        linear-gradient(135deg, rgba(148,163,184,0.16), rgba(100,116,139,0.1)),
+        #1a2637;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .5px;
+    }
+
+    .warehouse-item:hover {
+      transform: scale(1.015);
+      filter: brightness(1.06);
+    }
+
+    .warehouse-item.opened {
+      opacity: .4;
+      cursor: default;
+      filter: grayscale(.25);
+    }
+
+    .warehouse-item.digging {
+      animation: diggingPulse .75s infinite;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.08) inset;
+    }
+
+    @keyframes diggingPulse {
+      0%   { transform: scale(1); filter: brightness(1); }
+      50%  { transform: scale(.985); filter: brightness(1.16); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    .unknown-mark {
+      font-size: 22px;
+      opacity: .85;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .bag-item {
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bag-item:hover {
       transform: scale(1.01);
       filter: brightness(1.04);
     }
 
-    .map-item.opened {
-      cursor: default;
-      opacity: 0.45;
-      filter: grayscale(0.35);
-    }
-
-    .map-item.digging {
-      animation: pulseDig 0.8s infinite;
-      cursor: wait;
-    }
-
-    @keyframes pulseDig {
-      0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(0.98); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.8; }
-    }
-
-    .inventory-list, .log-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 560px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      border-radius: 12px;
-      padding: 10px 12px;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.15);
-    }
-
-    .item-left {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-
     .item-name {
-      font-weight: bold;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
       word-break: break-all;
     }
 
-    .item-meta {
-      font-size: 12px;
-      color: rgba(255,255,255,0.85);
+    .item-price {
+      font-size: 11px;
+      opacity: .95;
+    }
+
+    .item-size {
+      font-size: 10px;
+      opacity: .86;
+    }
+
+    .rarity-common {
+      background: linear-gradient(135deg, #7c8795, #cbd5e1);
+      color: #fff;
+    }
+    .rarity-uncommon {
+      background: linear-gradient(135deg, #166534, #4ade80);
+      color: #f0fdf4;
+    }
+    .rarity-rare {
+      background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+      color: #eff6ff;
+    }
+    .rarity-epic {
+      background: linear-gradient(135deg, #6d28d9, #c084fc);
+      color: #faf5ff;
+    }
+    .rarity-legendary {
+      background: linear-gradient(135deg, #b45309, #fbbf24);
+      color: #fff7ed;
+      box-shadow: 0 0 18px rgba(251,191,36,0.25);
+    }
+    .rarity-red {
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      color: #fff1f2;
+      box-shadow: 0 0 22px rgba(239,68,68,0.35);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 4px;
     }
 
     .log {
       font-size: 13px;
       line-height: 1.5;
       padding: 8px 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.04);
     }
 
-    .highlight {
-      color: #fbbf24;
-      font-weight: bold;
-    }
-
-    .danger-text {
-      color: #f87171;
-      font-weight: bold;
-    }
-
-    .success-text {
-      color: #34d399;
-      font-weight: bold;
-    }
-
-    .rarity-common {
-      color: #f3f4f6;
-      background: linear-gradient(135deg, #9ca3af, #d1d5db);
-    }
-
-    .rarity-uncommon {
-      color: #f0fdf4;
-      background: linear-gradient(135deg, #15803d, #4ade80);
-    }
-
-    .rarity-rare {
-      color: #eff6ff;
-      background: linear-gradient(135deg, #1d4ed8, #60a5fa);
-    }
-
-    .rarity-epic {
-      color: #faf5ff;
-      background: linear-gradient(135deg, #7c3aed, #c084fc);
-    }
-
-    .rarity-legendary {
-      color: #fff7ed;
-      background: linear-gradient(135deg, #d97706, #fbbf24);
-    }
-
-    .rarity-red {
-      color: #fff1f2;
-      background: linear-gradient(135deg, #b91c1c, #ef4444);
-    }
-
-    .status-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 12px;
+    .record {
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
       font-size: 13px;
-      color: #cbd5e1;
     }
 
-    @media (max-width: 1100px) {
-      .main {
-        grid-template-columns: 1fr;
-      }
+    .highlight { color: #fbbf24; font-weight: 800; }
+    .green { color: #34d399; font-weight: 700; }
+    .red { color: #f87171; font-weight: 700; }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    @media (max-width: 900px) {
-      .top-bar {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .legend-tag {
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
     }
 
-    @media (max-width: 640px) {
-      .top-bar {
-        grid-template-columns: 1fr;
-      }
+    .overlay-flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 999;
+    }
 
-      .map-grid {
-        grid-template-columns: repeat(5, 1fr);
-        grid-template-rows: repeat(16, 48px);
+    .overlay-flash.show-gold {
+      animation: goldFlash 1s ease-out;
+    }
+
+    .overlay-flash.show-red {
+      animation: redFlash 1.55s ease-out;
+    }
+
+    @keyframes goldFlash {
+      0% { opacity: 0; background: rgba(255,215,64,0); }
+      18% { opacity: 1; background: rgba(255,215,64,0.36); }
+      45% { opacity: .55; background: rgba(255,215,64,0.16); }
+      100% { opacity: 0; background: rgba(255,215,64,0); }
+    }
+
+    @keyframes redFlash {
+      0% { opacity: 0; background: rgba(255,0,64,0); }
+      10% { opacity: 1; background: rgba(255,0,64,0.35); }
+      22% { opacity: .2; background: rgba(255,255,255,0.55); }
+      34% { opacity: 1; background: rgba(255,0,64,0.42); }
+      55% { opacity: .45; background: rgba(255,80,80,0.18); }
+      100% { opacity: 0; background: rgba(255,0,64,0); }
+    }
+
+    .loot-toast {
+      position: fixed;
+      left: 50%;
+      top: 16%;
+      transform: translateX(-50%) translateY(-8px);
+      min-width: 260px;
+      max-width: 80vw;
+      text-align: center;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.35);
+    }
+
+    .loot-toast.show {
+      animation: toastPop 1.4s ease-out;
+    }
+
+    @keyframes toastPop {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-16px) scale(.95); }
+      16% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.04); }
+      52% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(1); }
+    }
+
+    .toast-gold {
+      background: linear-gradient(135deg, rgba(180,83,9,.95), rgba(251,191,36,.95));
+      color: #fff8e7;
+    }
+
+    .toast-red {
+      background: linear-gradient(135deg, rgba(127,29,29,.98), rgba(239,68,68,.98));
+      color: #fff1f2;
+    }
+
+    @media (max-width: 1200px) {
+      .main { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 980px) {
+      .top-bar { grid-template-columns: repeat(3, 1fr); }
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 680px) {
+      .top-bar { grid-template-columns: 1fr; }
+      .hero-stats { grid-template-columns: 1fr; }
+      .warehouse-grid {
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(12, 44px);
+      }
+      .bag-grid {
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: repeat(12, 42px);
       }
     }
   </style>
 </head>
 <body>
+  <div id="flashOverlay" class="overlay-flash"></div>
+  <div id="lootToast" class="loot-toast"></div>
+
   <div class="container">
-    <h1>挖宝行动 · 背包地图版</h1>
-    <p class="muted">地图改为仓库式背包布局。点击物品区域进行挖掘，按稀有度触发不同挖掘时长，物品直接进入右侧背包。</p>
+    <h1>Delta 挖宝行动</h1>
+    <p class="muted">仓库式摸宝地图 + 格子背包。未开启前不显示品质，撤离后可在背包点击出售。</p>
 
     <div class="top-bar">
       <div class="card">
         <h3>资金</h3>
-        <div>￥ <span id="money">5000</span></div>
+        <div style="font-size:24px;font-weight:900;color:#fbbf24;">￥<span id="money">0</span></div>
       </div>
       <div class="card">
         <h3>门票</h3>
-        <div><span id="ticket">3</span> 张</div>
+        <div style="font-size:24px;font-weight:900;"><span id="ticket">0</span> 张</div>
+      </div>
+      <div class="card">
+        <h3>入场费</h3>
+        <div style="font-size:24px;font-weight:900;color:#93c5fd;">￥<span id="ticketPrice">0</span></div>
       </div>
       <div class="card">
         <h3>地图状态</h3>
-        <div id="mapStatus">未进入地图</div>
+        <div id="mapStatus" style="font-size:22px;font-weight:900;">未进入</div>
       </div>
       <div class="card">
-        <h3>当前地图总值</h3>
-        <div>￥ <span id="raidValue">0</span></div>
+        <h3>地图预估总值</h3>
+        <div style="font-size:24px;font-weight:900;"><span id="raidValue">0</span></div>
       </div>
       <div class="card">
-        <h3>已挖价值</h3>
-        <div>￥ <span id="collectedValue">0</span></div>
+        <h3>当前局已带出</h3>
+        <div style="font-size:24px;font-weight:900;color:#34d399;">￥<span id="currentRaidExtracted">0</span></div>
       </div>
     </div>
 
     <div class="main">
       <div class="left-panel">
         <div class="card">
-          <h2>地图：废弃工地仓库</h2>
-          <div class="muted">入场消耗 1 张门票。地图中的物品以不同大小随机摆放。越高稀有度，挖掘时间越长。</div>
+          <div class="section-head">
+            <div>
+              <h2>地图：废弃物资仓</h2>
+              <div class="muted">点击未知物资进行挖掘。品质越高，挖掘越慢。未挖开前不显示具体稀有度。</div>
+            </div>
+            <div class="small">仓库填充度：<span id="fillRateText">-</span></div>
+          </div>
 
           <div class="controls">
             <button class="btn-primary" id="enterMapBtn">进入地图</button>
-            <button class="btn-success" id="extractBtn" disabled>撤离并保存战利品</button>
-            <button class="btn-warning" id="buyTicketBtn">购买门票（￥800）</button>
+            <button class="btn-success" id="extractBtn" disabled>撤离并结算</button>
+            <button class="btn-warning" id="buyTicketBtn">购买门票</button>
             <button class="btn-danger" id="resetDataBtn">重置存档</button>
           </div>
 
-          <div class="status-row">
-            <div>门票价格参考：<span class="highlight">￥800</span></div>
-            <div>说明：一整局可能血赚，也可能小亏</div>
+          <div class="hero-stats">
+            <div class="hero-box">
+              <div class="label">本局已挖出价值</div>
+              <div class="value safe">￥<span id="collectedValue">0</span></div>
+            </div>
+            <div class="hero-box">
+              <div class="label">本局剩余可挖价值</div>
+              <div class="value warn">￥<span id="remainValue">0</span></div>
+            </div>
+            <div class="hero-box">
+              <div class="label">本局收益差</div>
+              <div class="value money"><span id="profitDiff">0</span></div>
+            </div>
+            <div class="hero-box">
+              <div class="label">仓库已开启物资</div>
+              <div class="value"><span id="openedCount">0</span> / <span id="totalCount">0</span></div>
+            </div>
           </div>
 
-          <div class="map-wrapper">
-            <div class="map-grid" id="mapGrid"></div>
+          <div class="legend-row">
+            <div class="legend-tag">普通 / 优秀 / 稀有 / 史诗 / 传说 / 红色珍品</div>
+            <div class="legend-tag">高品质会有闪光提示</div>
+            <div class="legend-tag">点击背包物品可出售</div>
           </div>
+
+          <div class="warehouse-grid" id="warehouseGrid"></div>
         </div>
 
         <div class="card">
           <h2>行动日志</h2>
-          <div class="log-list" id="logList"></div>
+          <div class="list" id="logList"></div>
         </div>
       </div>
 
       <div class="right-panel">
         <div class="card">
-          <h2>背包</h2>
-          <div class="muted">挖出的物品直接进入背包。可出售，也可按品质整理。</div>
-          <div class="controls">
-            <button class="btn-secondary" id="sortBagBtn">按品质整理</button>
+          <div class="section-head">
+            <div>
+              <h2>战利品背包</h2>
+              <div class="muted">挖出的物品会自动放入格子背包。点击物品即可出售。</div>
+            </div>
+            <div class="controls" style="margin-top:0;">
+              <button class="btn-secondary" id="sortBagBtn">按品质整理</button>
+            </div>
           </div>
-          <div class="inventory-list" id="inventoryList"></div>
+          <div class="bag-grid" id="bagGrid"></div>
+        </div>
+
+        <div class="card">
+          <h2>撤离记录</h2>
+          <div class="muted" style="margin-bottom:8px;">记录最近的带出价值，方便看自己是赚是亏。</div>
+          <div class="list" id="historyList"></div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "dig_treasure_game_save_v2";
-    const TICKET_PRICE = 800;
-    const MAP_COLS = 12;
-    const MAP_ROWS = 10;
+    const STORAGE_KEY = "delta_dig_game_v3";
+
+    const MAP_COLS = 10;
+    const MAP_ROWS = 9;
+
+    const BAG_COLS = 8;
+    const BAG_ROWS = 10;
+
+    const TICKET_PRICE = 1200;
 
     const rarityConfig = {
-      common: {
-        label: "普通",
-        className: "rarity-common",
-        rank: 1,
-        digTime: 350
-      },
-      uncommon: {
-        label: "优秀",
-        className: "rarity-uncommon",
-        rank: 2,
-        digTime: 700
-      },
-      rare: {
-        label: "稀有",
-        className: "rarity-rare",
-        rank: 3,
-        digTime: 1100
-      },
-      epic: {
-        label: "史诗",
-        className: "rarity-epic",
-        rank: 4,
-        digTime: 1700
-      },
-      legendary: {
-        label: "传说",
-        className: "rarity-legendary",
-        rank: 5,
-        digTime: 2400
-      },
-      red: {
-        label: "红色珍品",
-        className: "rarity-red",
-        rank: 6,
-        digTime: 3200
-      }
+      common:    { label: "普通", className: "rarity-common",    rank: 1, digTime: 300 },
+      uncommon:  { label: "优秀", className: "rarity-uncommon",  rank: 2, digTime: 650 },
+      rare:      { label: "稀有", className: "rarity-rare",      rank: 3, digTime: 1050 },
+      epic:      { label: "史诗", className: "rarity-epic",      rank: 4, digTime: 1550 },
+      legendary: { label: "传说", className: "rarity-legendary", rank: 5, digTime: 2300 },
+      red:       { label: "红色珍品", className: "rarity-red",   rank: 6, digTime: 3200 }
     };
 
     const itemTemplates = [
-      { name: "生锈扳手", rarity: "common", size: [1,1], value: 80 },
-      { name: "废旧电路板", rarity: "common", size: [1,1], value: 110 },
-      { name: "损坏手表", rarity: "common", size: [1,2], value: 140 },
+      { name: "损坏电台", rarity: "common", sizeOptions: [[1,1],[1,2],[2,1],[2,2]], value: 180 },
+      { name: "生锈工具盒", rarity: "common", sizeOptions: [[2,1],[2,2],[1,2]], value: 220 },
+      { name: "破损机械模组", rarity: "common", sizeOptions: [[1,2],[2,2],[3,1]], value: 260 },
 
-      { name: "军用电池", rarity: "uncommon", size: [1,2], value: 240 },
-      { name: "便携工具箱", rarity: "uncommon", size: [2,2], value: 330 },
-      { name: "密封药剂盒", rarity: "uncommon", size: [2,1], value: 360 },
+      { name: "军规电池组", rarity: "uncommon", sizeOptions: [[1,2],[2,2],[3,1],[2,3]], value: 380 },
+      { name: "密封医疗箱", rarity: "uncommon", sizeOptions: [[2,2],[2,3],[3,2]], value: 520 },
+      { name: "便携维修包", rarity: "uncommon", sizeOptions: [[2,1],[2,2],[3,2]], value: 600 },
 
-      { name: "加密硬盘", rarity: "rare", size: [1,2], value: 620 },
-      { name: "战术通讯器", rarity: "rare", size: [2,2], value: 760 },
-      { name: "精密瞄具", rarity: "rare", size: [2,1], value: 880 },
+      { name: "加密硬盘", rarity: "rare", sizeOptions: [[1,2],[2,2],[2,3],[3,2]], value: 980 },
+      { name: "战术通讯器", rarity: "rare", sizeOptions: [[2,2],[3,2],[2,3]], value: 1200 },
+      { name: "精密瞄准组件", rarity: "rare", sizeOptions: [[2,1],[2,2],[3,2],[3,3]], value: 1450 },
 
-      { name: "实验核心模组", rarity: "epic", size: [2,2], value: 1500 },
-      { name: "限量纪念金币", rarity: "epic", size: [1,1], value: 1800 },
+      { name: "实验核心模组", rarity: "epic", sizeOptions: [[2,2],[2,3],[3,2],[3,3]], value: 2200 },
+      { name: "限量收藏徽章箱", rarity: "epic", sizeOptions: [[1,2],[2,2],[2,3],[3,2]], value: 2600 },
 
-      { name: "黄金狗牌", rarity: "legendary", size: [2,2], value: 3000 },
-      { name: "机密原型芯片", rarity: "legendary", size: [2,3], value: 4200 },
+      { name: "黄金狗牌盒", rarity: "legendary", sizeOptions: [[2,2],[2,3],[3,2],[3,3]], value: 4200 },
+      { name: "机密原型芯片箱", rarity: "legendary", sizeOptions: [[2,3],[3,2],[3,3],[4,2]], value: 5200 },
 
-      { name: "绝密数据容器", rarity: "red", size: [3,2], value: 7000 },
-      { name: "绝密服务器", rarity: "red", size: [3,3], value: 9000 },
-      { name: "红级军工箱", rarity: "red", size: [2,2], value: 8800 }
+      { name: "绝密数据容器", rarity: "red", sizeOptions: [[2,2],[2,3],[3,2],[3,3],[4,2]], value: 8800 },
+      { name: "红级军工保险箱", rarity: "red", sizeOptions: [[2,3],[3,3],[4,2]], value: 11000 }
     ];
 
     const state = {
-      money: 5000,
+      money: 8000,
       tickets: 3,
       inventory: [],
+      inventoryGrid: [],
       inRaid: false,
       raidMapItems: [],
       raidGrid: [],
       raidTotalValue: 0,
       collectedValue: 0,
       diggingId: null,
-      mapName: "废弃工地仓库"
+      fillRate: 0,
+      currentRaidExtracted: 0,
+      history: []
     };
 
     const moneyEl = document.getElementById("money");
     const ticketEl = document.getElementById("ticket");
+    const ticketPriceEl = document.getElementById("ticketPrice");
     const mapStatusEl = document.getElementById("mapStatus");
     const raidValueEl = document.getElementById("raidValue");
+    const currentRaidExtractedEl = document.getElementById("currentRaidExtracted");
     const collectedValueEl = document.getElementById("collectedValue");
-    const mapGridEl = document.getElementById("mapGrid");
-    const inventoryListEl = document.getElementById("inventoryList");
+    const remainValueEl = document.getElementById("remainValue");
+    const profitDiffEl = document.getElementById("profitDiff");
+    const openedCountEl = document.getElementById("openedCount");
+    const totalCountEl = document.getElementById("totalCount");
+    const fillRateTextEl = document.getElementById("fillRateText");
+
+    const warehouseGridEl = document.getElementById("warehouseGrid");
+    const bagGridEl = document.getElementById("bagGrid");
     const logListEl = document.getElementById("logList");
+    const historyListEl = document.getElementById("historyList");
+
+    const flashOverlayEl = document.getElementById("flashOverlay");
+    const lootToastEl = document.getElementById("lootToast");
 
     const enterMapBtn = document.getElementById("enterMapBtn");
     const extractBtn = document.getElementById("extractBtn");
@@ -473,15 +641,12 @@
 
     function addLog(text) {
       const time = new Date().toLocaleTimeString("zh-CN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
       });
       const div = document.createElement("div");
       div.className = "log";
       div.innerHTML = `[${time}] ${text}`;
       logListEl.prepend(div);
-
       while (logListEl.children.length > 60) {
         logListEl.removeChild(logListEl.lastChild);
       }
@@ -495,48 +660,32 @@
       return arr[randomInt(0, arr.length - 1)];
     }
 
-    function createRaidTargetValue() {
-      const roll = Math.random();
+    function showLootEffect(type, text) {
+      flashOverlayEl.className = "overlay-flash";
+      lootToastEl.className = "loot-toast";
+      lootToastEl.textContent = text || "";
 
-      if (roll < 0.65) {
-        return randomInt(750, 1200);
+      if (type === "gold") {
+        flashOverlayEl.classList.add("show-gold");
+        lootToastEl.classList.add("toast-gold", "show");
+      } else if (type === "red") {
+        flashOverlayEl.classList.add("show-red");
+        lootToastEl.classList.add("toast-red", "show");
       }
-      if (roll < 0.85) {
-        return randomInt(400, 850);
-      }
-      if (roll < 0.96) {
-        return randomInt(1400, 3500);
-      }
-      if (roll < 0.995) {
-        return randomInt(3500, 7000);
-      }
-      return randomInt(7000, 10000);
+
+      setTimeout(() => {
+        flashOverlayEl.className = "overlay-flash";
+        lootToastEl.className = "loot-toast";
+        lootToastEl.textContent = "";
+      }, type === "red" ? 1700 : 1500);
     }
 
-    function pickTemplateByBudget(remainingValue) {
-      const available = itemTemplates.filter(t => t.value <= remainingValue * 1.25);
-      if (available.length === 0) {
-        return randomChoice(itemTemplates.filter(t => t.rarity === "common"));
-      }
-
-      const roll = Math.random();
-      let rarityWanted = "common";
-
-      if (roll < 0.42) rarityWanted = "common";
-      else if (roll < 0.70) rarityWanted = "uncommon";
-      else if (roll < 0.87) rarityWanted = "rare";
-      else if (roll < 0.95) rarityWanted = "epic";
-      else if (roll < 0.99) rarityWanted = "legendary";
-      else rarityWanted = "red";
-
-      const sameRarity = available.filter(t => t.rarity === rarityWanted);
-      if (sameRarity.length > 0) return randomChoice(sameRarity);
-
-      return randomChoice(available);
+    function create2DGrid(rows, cols) {
+      return Array.from({ length: rows }, () => Array(cols).fill(null));
     }
 
-    function canPlace(grid, x, y, w, h) {
-      if (x + w > MAP_COLS || y + h > MAP_ROWS) return false;
+    function canPlace(grid, cols, rows, x, y, w, h) {
+      if (x + w > cols || y + h > rows) return false;
       for (let yy = y; yy < y + h; yy++) {
         for (let xx = x; xx < x + w; xx++) {
           if (grid[yy][xx] !== null) return false;
@@ -545,37 +694,89 @@
       return true;
     }
 
-    function placeItem(grid, itemId, x, y, w, h) {
+    function placeOnGrid(grid, x, y, w, h, value) {
       for (let yy = y; yy < y + h; yy++) {
         for (let xx = x; xx < x + w; xx++) {
-          grid[yy][xx] = itemId;
+          grid[yy][xx] = value;
         }
       }
     }
 
+    function countFilled(grid) {
+      let count = 0;
+      for (const row of grid) {
+        for (const cell of row) {
+          if (cell !== null) count++;
+        }
+      }
+      return count;
+    }
+
+    function createRaidTargetValue() {
+      const roll = Math.random();
+      if (roll < 0.62) return randomInt(1300, 2300);
+      if (roll < 0.84) return randomInt(700, 1300);
+      if (roll < 0.95) return randomInt(2300, 5200);
+      if (roll < 0.992) return randomInt(5200, 12000);
+      return randomInt(12000, 24000);
+    }
+
+    function pickRarityByBudget(remainingValue) {
+      const roll = Math.random();
+      if (remainingValue > 8000 && roll > 0.985) return "red";
+      if (remainingValue > 3500 && roll > 0.95) return "legendary";
+      if (roll < 0.36) return "common";
+      if (roll < 0.63) return "uncommon";
+      if (roll < 0.82) return "rare";
+      if (roll < 0.94) return "epic";
+      if (roll < 0.992) return "legendary";
+      return "red";
+    }
+
+    function pickTemplateForRaid(remainingValue) {
+      const desiredRarity = pickRarityByBudget(remainingValue);
+      let pool = itemTemplates.filter(t => t.rarity === desiredRarity);
+
+      const filtered = pool.filter(t => t.value <= remainingValue * 1.65 || remainingValue > 5000);
+      if (filtered.length) return randomChoice(filtered);
+
+      const fallback = itemTemplates.filter(t => t.value <= remainingValue * 1.35);
+      if (fallback.length) return randomChoice(fallback);
+
+      return randomChoice(itemTemplates.filter(t => t.rarity === "common"));
+    }
+
     function generateRaidMap() {
       const targetValue = createRaidTargetValue();
-      const grid = Array.from({ length: MAP_ROWS }, () => Array(MAP_COLS).fill(null));
-      const items = [];
-      let currentValue = 0;
-      let safety = 0;
+      const targetFill = Math.random() < 0.5 ? randomInt(48, 66) : randomInt(67, 84);
 
-      while (currentValue < targetValue && safety < 300) {
-        safety++;
-        const remaining = targetValue - currentValue;
-        const tpl = pickTemplateByBudget(remaining);
-        const rotated = Math.random() < 0.5;
-        const w = rotated ? tpl.size[1] : tpl.size[0];
-        const h = rotated ? tpl.size[0] : tpl.size[1];
+      const grid = create2DGrid(MAP_ROWS, MAP_COLS);
+      const items = [];
+      let totalValue = 0;
+      let tries = 0;
+
+      while (tries < 1200) {
+        tries++;
+
+        const filledCells = countFilled(grid);
+        const fillPercent = Math.round(filledCells / (MAP_COLS * MAP_ROWS) * 100);
+
+        if (fillPercent >= targetFill && totalValue >= targetValue * 0.7) break;
+        if (fillPercent >= 88) break;
+
+        const remainingValue = Math.max(200, targetValue - totalValue);
+        const tpl = pickTemplateForRaid(remainingValue);
+        const size = randomChoice(tpl.sizeOptions);
+        const w = size[0];
+        const h = size[1];
 
         let placed = false;
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 80; i++) {
           const x = randomInt(0, MAP_COLS - 1);
           const y = randomInt(0, MAP_ROWS - 1);
+          if (!canPlace(grid, MAP_COLS, MAP_ROWS, x, y, w, h)) continue;
 
-          if (!canPlace(grid, x, y, w, h)) continue;
-
-          const valueFloat = randomInt(90, 115) / 100;
+          const priceFloat = randomInt(88, 116) / 100;
           const item = {
             id: "raid_" + Date.now() + "_" + Math.random().toString(16).slice(2),
             name: tpl.name,
@@ -584,33 +785,60 @@
             height: h,
             x,
             y,
-            value: Math.round(tpl.value * valueFloat),
+            value: Math.round(tpl.value * priceFloat),
             opened: false
           };
 
           items.push(item);
-          placeItem(grid, item.id, x, y, w, h);
-          currentValue += item.value;
+          placeOnGrid(grid, x, y, w, h, item.id);
+          totalValue += item.value;
           placed = true;
           break;
         }
 
-        if (!placed) break;
+        if (!placed && Math.random() < 0.18) break;
       }
 
       state.raidGrid = grid;
       state.raidMapItems = items;
-      state.raidTotalValue = currentValue;
+      state.raidTotalValue = totalValue;
       state.collectedValue = 0;
+      state.currentRaidExtracted = 0;
+      state.fillRate = Math.round(countFilled(grid) / (MAP_COLS * MAP_ROWS) * 100);
+    }
+
+    function generateInventoryGrid() {
+      state.inventoryGrid = create2DGrid(BAG_ROWS, BAG_COLS);
+      const sorted = [...state.inventory];
+
+      for (const item of sorted) {
+        item.bagX = null;
+        item.bagY = null;
+      }
+
+      for (const item of sorted) {
+        let placed = false;
+        for (let y = 0; y < BAG_ROWS; y++) {
+          for (let x = 0; x < BAG_COLS; x++) {
+            if (!canPlace(state.inventoryGrid, BAG_COLS, BAG_ROWS, x, y, item.width, item.height)) continue;
+            placeOnGrid(state.inventoryGrid, x, y, item.width, item.height, item.id);
+            item.bagX = x;
+            item.bagY = y;
+            placed = true;
+            break;
+          }
+          if (placed) break;
+        }
+      }
     }
 
     function enterMap() {
       if (state.inRaid) {
-        addLog("你已经在地图中了。");
+        addLog("你已经在地图中。");
         return;
       }
       if (state.tickets < 1) {
-        addLog('<span class="danger-text">门票不足，无法进入地图。</span>');
+        addLog('<span class="red">门票不足，无法进入地图。</span>');
         return;
       }
 
@@ -619,42 +847,52 @@
       state.diggingId = null;
       generateRaidMap();
 
-      addLog(`你消耗了 <span class="highlight">1 张门票</span> 进入 <span class="highlight">${state.mapName}</span>。`);
-      addLog(`本次地图预估总价值约 <span class="highlight">￥${formatMoney(state.raidTotalValue)}</span>。祝你好运。`);
-
+      addLog(`你消耗 <span class="highlight">1 张门票</span> 进入废弃物资仓。`);
+      addLog(`本次地图预估总值约 <span class="highlight">￥${formatMoney(state.raidTotalValue)}</span>，填充度 <span class="highlight">${state.fillRate}%</span>。`);
       render();
       saveGame();
     }
 
     function digItem(itemId) {
-      if (!state.inRaid) return;
-      if (state.diggingId) return;
-
-      const item = state.raidMapItems.find(i => i.id === itemId);
+      if (!state.inRaid || state.diggingId) return;
+      const item = state.raidMapItems.find(v => v.id === itemId);
       if (!item || item.opened) return;
 
       const rarityInfo = rarityConfig[item.rarity];
       state.diggingId = item.id;
+      addLog(`开始搜索未知物资...`);
       render();
-
-      addLog(`开始挖掘 <span class="${rarityInfo.className}">${item.name}</span>...`);
 
       setTimeout(() => {
         item.opened = true;
         state.diggingId = null;
-        state.inventory.push({
+        state.collectedValue += item.value;
+        state.currentRaidExtracted = state.collectedValue;
+
+        const bagItem = {
           id: "bag_" + Date.now() + "_" + Math.random().toString(16).slice(2),
           name: item.name,
           rarity: item.rarity,
           value: item.value,
-          sizeText: `${item.width}x${item.height}`
-        });
-        state.collectedValue += item.value;
+          width: item.width,
+          height: item.height
+        };
+        state.inventory.push(bagItem);
+        generateInventoryGrid();
 
         addLog(
-          `你挖出了 <span class="${rarityInfo.className}">${rarityInfo.label}</span> 物品：` +
+          `你挖出了 <span class="${rarityInfo.className}">${rarityInfo.label}</span> 物资：` +
           `<span class="${rarityInfo.className}">${item.name}</span>，价值 ￥${formatMoney(item.value)}`
         );
+
+        if (item.rarity === "legendary") {
+          showLootEffect("gold", "出 金 !");
+          addLog('<span class="highlight">【出金】</span> 你挖到了高价值传说物资！');
+        }
+        if (item.rarity === "red") {
+          showLootEffect("red", "出 红 !!");
+          addLog('<span class="red">【出红】</span> 红色珍品出现！这一把可能要发财了！');
+        }
 
         render();
         saveGame();
@@ -664,32 +902,47 @@
     function extractLoot() {
       if (!state.inRaid) return;
 
+      const diff = state.currentRaidExtracted - TICKET_PRICE;
+      const rec = {
+        time: new Date().toLocaleString("zh-CN"),
+        value: state.currentRaidExtracted,
+        diff
+      };
+      state.history.unshift(rec);
+      if (state.history.length > 20) state.history.length = 20;
+
+      addLog(
+        `成功撤离，本次带出价值 <span class="green">￥${formatMoney(state.currentRaidExtracted)}</span>，` +
+        `相较门票 ${diff >= 0 ? `净赚 <span class="green">￥${formatMoney(diff)}</span>` : `净亏 <span class="red">￥${formatMoney(Math.abs(diff))}</span>`}`
+      );
+
       state.inRaid = false;
       state.raidMapItems = [];
       state.raidGrid = [];
       state.raidTotalValue = 0;
       state.collectedValue = 0;
       state.diggingId = null;
+      state.fillRate = 0;
+      state.currentRaidExtracted = 0;
 
-      addLog('<span class="success-text">你已成功撤离。</span>');
       render();
       saveGame();
     }
 
     function sellInventoryItem(id) {
-      const idx = state.inventory.findIndex(item => item.id === id);
-      if (idx === -1) return;
+      const index = state.inventory.findIndex(v => v.id === id);
+      if (index === -1) return;
 
-      const item = state.inventory[idx];
+      const item = state.inventory[index];
       const rarityInfo = rarityConfig[item.rarity];
       state.money += item.value;
-      state.inventory.splice(idx, 1);
+      state.inventory.splice(index, 1);
+      generateInventoryGrid();
 
       addLog(
-        `出售了 <span class="${rarityInfo.className}">${item.name}</span>，获得 ` +
-        `<span class="success-text">￥${formatMoney(item.value)}</span>`
+        `出售 <span class="${rarityInfo.className}">${item.name}</span>，获得 ` +
+        `<span class="green">￥${formatMoney(item.value)}</span>`
       );
-
       render();
       saveGame();
     }
@@ -698,8 +951,12 @@
       state.inventory.sort((a, b) => {
         const rankDiff = rarityConfig[b.rarity].rank - rarityConfig[a.rarity].rank;
         if (rankDiff !== 0) return rankDiff;
+        const areaA = a.width * a.height;
+        const areaB = b.width * b.height;
+        if (areaB !== areaA) return areaB - areaA;
         return b.value - a.value;
       });
+      generateInventoryGrid();
       addLog("背包已按品质整理。");
       render();
       saveGame();
@@ -707,132 +964,168 @@
 
     function buyTicket() {
       if (state.money < TICKET_PRICE) {
-        addLog('<span class="danger-text">资金不足，无法购买门票。</span>');
+        addLog('<span class="red">资金不足，无法购买门票。</span>');
         return;
       }
       state.money -= TICKET_PRICE;
       state.tickets += 1;
-      addLog(`你花费 ￥${formatMoney(TICKET_PRICE)} 购买了 1 张门票。`);
+      addLog(`花费 ￥${formatMoney(TICKET_PRICE)} 购买 1 张门票。`);
       render();
       saveGame();
     }
 
     function resetData() {
-      const ok = confirm("确定要重置存档吗？");
-      if (!ok) return;
-
+      if (!confirm("确定重置存档吗？")) return;
       localStorage.removeItem(STORAGE_KEY);
-      state.money = 5000;
+
+      state.money = 8000;
       state.tickets = 3;
       state.inventory = [];
+      state.inventoryGrid = [];
       state.inRaid = false;
       state.raidMapItems = [];
       state.raidGrid = [];
       state.raidTotalValue = 0;
       state.collectedValue = 0;
       state.diggingId = null;
-      state.mapName = "废弃工地仓库";
+      state.fillRate = 0;
+      state.currentRaidExtracted = 0;
+      state.history = [];
 
       addLog("存档已重置。");
       render();
       saveGame();
     }
 
-    function renderTopBar() {
+    function renderTop() {
       moneyEl.textContent = formatMoney(state.money);
       ticketEl.textContent = state.tickets;
+      ticketPriceEl.textContent = formatMoney(TICKET_PRICE);
       mapStatusEl.innerHTML = state.inRaid
-        ? '<span class="success-text">探索中</span>'
-        : '未进入地图';
-
+        ? '<span class="green">探索中</span>'
+        : '未进入';
       raidValueEl.textContent = formatMoney(state.raidTotalValue);
+      currentRaidExtractedEl.textContent = formatMoney(state.currentRaidExtracted);
       collectedValueEl.textContent = formatMoney(state.collectedValue);
+      remainValueEl.textContent = formatMoney(Math.max(0, state.raidTotalValue - state.collectedValue));
+
+      const diff = state.collectedValue - TICKET_PRICE;
+      if (!state.inRaid && state.collectedValue === 0) {
+        profitDiffEl.innerHTML = `￥0`;
+      } else {
+        profitDiffEl.innerHTML = diff >= 0
+          ? `<span class="green">+￥${formatMoney(diff)}</span>`
+          : `<span class="red">-￥${formatMoney(Math.abs(diff))}</span>`;
+      }
+
+      const openedCount = state.raidMapItems.filter(v => v.opened).length;
+      openedCountEl.textContent = openedCount;
+      totalCountEl.textContent = state.raidMapItems.length;
+      fillRateTextEl.textContent = state.fillRate ? `${state.fillRate}%` : "-";
 
       enterMapBtn.disabled = state.inRaid;
       extractBtn.disabled = !state.inRaid || !!state.diggingId;
     }
 
-    function renderMap() {
-      mapGridEl.innerHTML = "";
+    function renderWarehouse() {
+      warehouseGridEl.innerHTML = "";
 
-      if (!state.inRaid) {
-        for (let y = 0; y < MAP_ROWS; y++) {
-          for (let x = 0; x < MAP_COLS; x++) {
-            const cell = document.createElement("div");
-            cell.className = "map-cell";
-            cell.textContent = "未进入";
-            mapGridEl.appendChild(cell);
-          }
-        }
-        return;
+      for (let i = 0; i < MAP_COLS * MAP_ROWS; i++) {
+        const cell = document.createElement("div");
+        cell.className = "grid-cell";
+        warehouseGridEl.appendChild(cell);
       }
 
-      for (let y = 0; y < MAP_ROWS; y++) {
-        for (let x = 0; x < MAP_COLS; x++) {
-          const cell = document.createElement("div");
-          cell.className = "map-cell";
-          mapGridEl.appendChild(cell);
-        }
-      }
+      if (!state.inRaid) return;
 
       state.raidMapItems.forEach(item => {
-        const rarityInfo = rarityConfig[item.rarity];
         const div = document.createElement("div");
-        div.className = `map-item ${rarityInfo.className}`;
+        div.className = "warehouse-item";
         if (item.opened) div.classList.add("opened");
         if (state.diggingId === item.id) div.classList.add("digging");
 
         div.style.gridColumn = `${item.x + 1} / span ${item.width}`;
         div.style.gridRow = `${item.y + 1} / span ${item.height}`;
 
-        div.innerHTML = item.opened
-          ? `${item.name}<br><span style="font-size:11px;">已获取</span>`
-          : `${item.width}x${item.height}<br>${rarityInfo.label}`;
+        if (item.opened) {
+          div.innerHTML = `<div>已搜索</div>`;
+        } else {
+          div.innerHTML = `
+            <div>
+              <span class="unknown-mark">?</span>
+              未知物资
+            </div>
+          `;
+        }
 
         div.addEventListener("click", () => digItem(item.id));
-        mapGridEl.appendChild(div);
+        warehouseGridEl.appendChild(div);
       });
     }
 
-    function renderInventory() {
-      inventoryListEl.innerHTML = "";
+    function renderBag() {
+      generateInventoryGrid();
+      bagGridEl.innerHTML = "";
 
-      if (state.inventory.length === 0) {
+      for (let i = 0; i < BAG_COLS * BAG_ROWS; i++) {
+        const cell = document.createElement("div");
+        cell.className = "grid-cell";
+        bagGridEl.appendChild(cell);
+      }
+
+      for (const item of state.inventory) {
+        if (item.bagX == null || item.bagY == null) continue;
+        const rarityInfo = rarityConfig[item.rarity];
         const div = document.createElement("div");
-        div.className = "muted";
-        div.textContent = "背包空空如也，快去挖宝吧。";
-        inventoryListEl.appendChild(div);
+        div.className = `bag-item ${rarityInfo.className}`;
+        div.style.gridColumn = `${item.bagX + 1} / span ${item.width}`;
+        div.style.gridRow = `${item.bagY + 1} / span ${item.height}`;
+        div.title = `点击出售：${item.name}`;
+
+        div.innerHTML = `
+          <div class="item-name">${item.name}</div>
+          <div class="item-price">￥${formatMoney(item.value)}</div>
+          <div class="item-size">${rarityInfo.label} · ${item.width}x${item.height}</div>
+        `;
+
+        div.addEventListener("click", () => sellInventoryItem(item.id));
+        bagGridEl.appendChild(div);
+      }
+    }
+
+    function renderHistory() {
+      historyListEl.innerHTML = "";
+
+      if (state.history.length === 0) {
+        const div = document.createElement("div");
+        div.className = "record";
+        div.textContent = "还没有撤离记录。";
+        historyListEl.appendChild(div);
         return;
       }
 
-      state.inventory.forEach(item => {
-        const rarityInfo = rarityConfig[item.rarity];
-
-        const wrap = document.createElement("div");
-        wrap.className = `item ${rarityInfo.className}`;
-
-        const left = document.createElement("div");
-        left.className = "item-left";
-        left.innerHTML = `
-          <div class="item-name">${item.name}</div>
-          <div class="item-meta">${rarityInfo.label} · 占格 ${item.sizeText} · ￥${formatMoney(item.value)}</div>
+      state.history.forEach((rec, i) => {
+        const div = document.createElement("div");
+        div.className = "record";
+        div.innerHTML = `
+          <div style="font-weight:800;margin-bottom:4px;">第 ${state.history.length - i} 次撤离</div>
+          <div class="small">${rec.time}</div>
+          <div style="margin-top:6px;">带出：<span class="green">￥${formatMoney(rec.value)}</span></div>
+          <div>结果：${
+            rec.diff >= 0
+              ? `<span class="green">净赚 ￥${formatMoney(rec.diff)}</span>`
+              : `<span class="red">净亏 ￥${formatMoney(Math.abs(rec.diff))}</span>`
+          }</div>
         `;
-
-        const btn = document.createElement("button");
-        btn.className = "btn-success";
-        btn.textContent = "出售";
-        btn.addEventListener("click", () => sellInventoryItem(item.id));
-
-        wrap.appendChild(left);
-        wrap.appendChild(btn);
-        inventoryListEl.appendChild(wrap);
+        historyListEl.appendChild(div);
       });
     }
 
     function render() {
-      renderTopBar();
-      renderMap();
-      renderInventory();
+      renderTop();
+      renderWarehouse();
+      renderBag();
+      renderHistory();
     }
 
     enterMapBtn.addEventListener("click", enterMap);
@@ -843,7 +1136,7 @@
 
     loadGame();
     render();
-    addLog("欢迎来到挖宝行动背包地图版。");
+    addLog("欢迎来到 Delta 挖宝行动。祝你今天出金出红。");
   </script>
 </body>
 </html>
