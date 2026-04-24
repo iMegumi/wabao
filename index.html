@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>挖宝行动 - 单机版</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(180deg, #111827, #0f172a);
+      color: #e5e7eb;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 12px;
+    }
+
+    .top-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    .left-panel, .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .map-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.2s;
+      font-size: 13px;
+      min-height: 70px;
+    }
+
+    .cell:hover {
+      background: #273449;
+    }
+
+    .cell.opened {
+      background: #0f766e;
+      border-color: #14b8a6;
+    }
+
+    .cell.empty {
+      background: #374151;
+    }
+
+    .cell.loot {
+      background: #3f3f46;
+    }
+
+    .inventory-list, .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .item-name {
+      font-weight: bold;
+    }
+
+    .item-meta {
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+
+    .rarity-common { color: #d1d5db; }
+    .rarity-uncommon { color: #4ade80; }
+    .rarity-rare { color: #60a5fa; }
+    .rarity-epic { color: #c084fc; }
+    .rarity-legendary { color: #f59e0b; }
+
+    .log {
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .muted {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .highlight {
+      color: #fbbf24;
+      font-weight: bold;
+    }
+
+    .danger-text {
+      color: #f87171;
+      font-weight: bold;
+    }
+
+    .success-text {
+      color: #34d399;
+      font-weight: bold;
+    }
+
+    @media (max-width: 900px) {
+      .top-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .map-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .top-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .cell {
+        min-height: 58px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>挖宝行动 · 单机版</h1>
+    <p class="muted">消耗门票进入地图，在格子中挖宝，带回战利品出售赚钱。纯前端存档，适合直接部署到 GitHub Pages。</p>
+
+    <div class="top-bar">
+      <div class="card">
+        <h3>资金</h3>
+        <div>￥ <span id="money">5000</span></div>
+      </div>
+      <div class="card">
+        <h3>门票</h3>
+        <div><span id="ticket">3</span> 张</div>
+      </div>
+      <div class="card">
+        <h3>背包容量</h3>
+        <div><span id="bagCount">0</span> / <span id="bagLimit">12</span></div>
+      </div>
+      <div class="card">
+        <h3>地图状态</h3>
+        <div id="mapStatus">未进入地图</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="left-panel">
+        <div class="card">
+          <h2>地图：废弃工地</h2>
+          <div class="muted">入场消耗 1 张门票。5x5 探索格，每格只能挖一次。有几率空手，也可能出高价值物品。</div>
+          <div class="controls">
+            <button class="btn-primary" id="enterMapBtn">进入地图</button>
+            <button class="btn-success" id="extractBtn" disabled>带着战利品撤离</button>
+            <button class="btn-warning" id="buyTicketBtn">购买门票（￥800）</button>
+            <button class="btn-danger" id="resetDataBtn">重置存档</button>
+          </div>
+          <div class="map-grid" id="mapGrid"></div>
+        </div>
+
+        <div class="card">
+          <h2>行动日志</h2>
+          <div class="log-list" id="logList"></div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="card">
+          <h2>临时战利品</h2>
+          <div class="muted">在地图中挖到的物品，撤离后自动进入背包。</div>
+          <div class="inventory-list" id="raidLootList"></div>
+        </div>
+
+        <div class="card">
+          <h2>背包</h2>
+          <div class="muted">点击出售按钮可直接卖出物品。</div>
+          <div class="inventory-list" id="inventoryList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "dig_treasure_game_save_v1";
+
+    const rarityConfig = {
+      common: { label: "普通", className: "rarity-common", multiplier: 1 },
+      uncommon: { label: "优秀", className: "rarity-uncommon", multiplier: 1.4 },
+      rare: { label: "稀有", className: "rarity-rare", multiplier: 2.2 },
+      epic: { label: "史诗", className: "rarity-epic", multiplier: 4 },
+      legendary: { label: "传说", className: "rarity-legendary", multiplier: 8 }
+    };
+
+    const itemPool = [
+      { name: "生锈扳手", base: 90, rarity: "common" },
+      { name: "废旧电路板", base: 130, rarity: "common" },
+      { name: "破损机械表", base: 180, rarity: "common" },
+
+      { name: "便携工具箱", base: 260, rarity: "uncommon" },
+      { name: "军用电池组", base: 340, rarity: "uncommon" },
+      { name: "密封药剂盒", base: 380, rarity: "uncommon" },
+
+      { name: "加密硬盘", base: 650, rarity: "rare" },
+      { name: "精密瞄具", base: 780, rarity: "rare" },
+      { name: "战术通讯器", base: 880, rarity: "rare" },
+
+      { name: "限量纪念金币", base: 1500, rarity: "epic" },
+      { name: "实验型核心模组", base: 1800, rarity: "epic" },
+
+      { name: "黄金狗牌", base: 3200, rarity: "legendary" },
+      { name: "机密原型芯片", base: 4200, rarity: "legendary" }
+    ];
+
+    const state = {
+      money: 5000,
+      tickets: 3,
+      bagLimit: 12,
+      inventory: [],
+      inRaid: false,
+      raidLoot: [],
+      mapCells: [],
+      mapName: "废弃工地"
+    };
+
+    const moneyEl = document.getElementById("money");
+    const ticketEl = document.getElementById("ticket");
+    const bagCountEl = document.getElementById("bagCount");
+    const bagLimitEl = document.getElementById("bagLimit");
+    const mapStatusEl = document.getElementById("mapStatus");
+    const mapGridEl = document.getElementById("mapGrid");
+    const inventoryListEl = document.getElementById("inventoryList");
+    const raidLootListEl = document.getElementById("raidLootList");
+    const logListEl = document.getElementById("logList");
+    const enterMapBtn = document.getElementById("enterMapBtn");
+    const extractBtn = document.getElementById("extractBtn");
+    const buyTicketBtn = document.getElementById("buyTicketBtn");
+    const resetDataBtn = document.getElementById("resetDataBtn");
+
+    function saveGame() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadGame() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        Object.assign(state, data);
+      } catch (e) {
+        console.warn("存档读取失败", e);
+      }
+    }
+
+    function formatMoney(num) {
+      return Math.round(num).toLocaleString("zh-CN");
+    }
+
+    function addLog(text) {
+      const time = new Date().toLocaleTimeString("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+      const log = `[${time}] ${text}`;
+      const div = document.createElement("div");
+      div.className = "log";
+      div.innerHTML = log;
+      logListEl.prepend(div);
+
+      while (logListEl.children.length > 50) {
+        logListEl.removeChild(logListEl.lastChild);
+      }
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function weightedLootRoll() {
+      const roll = Math.random();
+
+      let rarity;
+      if (roll < 0.45) rarity = "common";
+      else if (roll < 0.75) rarity = "uncommon";
+      else if (roll < 0.92) rarity = "rare";
+      else if (roll < 0.985) rarity = "epic";
+      else rarity = "legendary";
+
+      const pool = itemPool.filter(item => item.rarity === rarity);
+      const selected = pool[randomInt(0, pool.length - 1)];
+      const priceFloat = randomInt(85, 115) / 100;
+      const value = Math.round(selected.base * rarityConfig[rarity].multiplier * priceFloat);
+
+      return {
+        id: Date.now() + "_" + Math.random().toString(16).slice(2),
+        name: selected.name,
+        rarity,
+        value
+      };
+    }
+
+    function createMap() {
+      state.mapCells = Array.from({ length: 25 }, () => {
+        const lootChance = Math.random();
+        if (lootChance < 0.35) {
+          return { opened: false, type: "empty", item: null };
+        }
+        return { opened: false, type: "loot", item: weightedLootRoll() };
+      });
+    }
+
+    function enterMap() {
+      if (state.inRaid) {
+        addLog("你已经在地图中了。");
+        return;
+      }
+      if (state.tickets < 1) {
+        addLog('<span class="danger-text">门票不足，无法进入地图。</span>');
+        return;
+      }
+
+      state.tickets -= 1;
+      state.inRaid = true;
+      state.raidLoot = [];
+      createMap();
+
+      addLog(`你消耗了 <span class="highlight">1 张门票</span>，进入了 <span class="highlight">${state.mapName}</span>。`);
+      addLog("开始搜索格子，看看今天是血赚还是亏本。");
+
+      render();
+      saveGame();
+    }
+
+    function extractLoot() {
+      if (!state.inRaid) return;
+
+      let movedCount = 0;
+      const remain = [];
+
+      for (const item of state.raidLoot) {
+        if (state.inventory.length < state.bagLimit) {
+          state.inventory.push(item);
+          movedCount++;
+        } else {
+          remain.push(item);
+        }
+      }
+
+      if (remain.length > 0) {
+        addLog(`<span class="danger-text">背包已满，仍有 ${remain.length} 件战利品未能带出，已丢弃。</span>`);
+      }
+
+      state.raidLoot = [];
+      state.inRaid = false;
+      state.mapCells = [];
+
+      addLog(`<span class="success-text">成功撤离！</span> 本次带回 ${movedCount} 件物品。`);
+      render();
+      saveGame();
+    }
+
+    function digCell(index) {
+      if (!state.inRaid) return;
+
+      const cell = state.mapCells[index];
+      if (!cell || cell.opened) return;
+
+      cell.opened = true;
+
+      if (cell.type === "empty") {
+        addLog(`你挖开了格子 #${index + 1}，结果什么都没有。`);
+      } else if (cell.type === "loot" && cell.item) {
+        const item = cell.item;
+        state.raidLoot.push(item);
+        const rarityInfo = rarityConfig[item.rarity];
+        addLog(
+          `你在格子 #${index + 1} 挖到了 <span class="${rarityInfo.className}">${rarityInfo.label}</span> 物品：` +
+          `<span class="${rarityInfo.className}">${item.name}</span>，预估价值 ￥${formatMoney(item.value)}`
+        );
+      }
+
+      render();
+      saveGame();
+    }
+
+    function sellInventoryItem(id) {
+      const index = state.inventory.findIndex(item => item.id === id);
+      if (index === -1) return;
+
+      const item = state.inventory[index];
+      state.money += item.value;
+      state.inventory.splice(index, 1);
+
+      const rarityInfo = rarityConfig[item.rarity];
+      addLog(
+        `你出售了 <span class="${rarityInfo.className}">${item.name}</span>，获得 ` +
+        `<span class="success-text">￥${formatMoney(item.value)}</span>`
+      );
+
+      render();
+      saveGame();
+    }
+
+    function buyTicket() {
+      const price = 800;
+      if (state.money < price) {
+        addLog('<span class="danger-text">资金不足，无法购买门票。</span>');
+        return;
+      }
+      state.money -= price;
+      state.tickets += 1;
+      addLog(`你花费了 ￥${formatMoney(price)} 购买了 1 张门票。`);
+      render();
+      saveGame();
+    }
+
+    function resetData() {
+      const ok = confirm("确定要重置存档吗？资金、门票、背包都会恢复初始状态。");
+      if (!ok) return;
+
+      localStorage.removeItem(STORAGE_KEY);
+      state.money = 5000;
+      state.tickets = 3;
+      state.bagLimit = 12;
+      state.inventory = [];
+      state.inRaid = false;
+      state.raidLoot = [];
+      state.mapCells = [];
+      state.mapName = "废弃工地";
+
+      addLog("存档已重置。");
+      render();
+      saveGame();
+    }
+
+    function renderTopBar() {
+      moneyEl.textContent = formatMoney(state.money);
+      ticketEl.textContent = state.tickets;
+      bagCountEl.textContent = state.inventory.length;
+      bagLimitEl.textContent = state.bagLimit;
+      mapStatusEl.innerHTML = state.inRaid
+        ? `<span class="success-text">探索中</span>`
+        : "未进入地图";
+
+      enterMapBtn.disabled = state.inRaid;
+      extractBtn.disabled = !state.inRaid;
+    }
+
+    function renderMap() {
+      mapGridEl.innerHTML = "";
+
+      if (!state.inRaid) {
+        for (let i = 0; i < 25; i++) {
+          const div = document.createElement("div");
+          div.className = "cell";
+          div.textContent = "未进入";
+          mapGridEl.appendChild(div);
+        }
+        return;
+      }
+
+      state.mapCells.forEach((cell, index) => {
+        const div = document.createElement("div");
+        div.className = "cell";
+
+        if (!cell.opened) {
+          div.textContent = `格子 ${index + 1}`;
+        } else {
+          div.classList.add("opened");
+          if (cell.type === "empty") {
+            div.classList.add("empty");
+            div.textContent = "空";
+          } else {
+            div.classList.add("loot");
+            div.textContent = "已挖到";
+          }
+        }
+
+        div.addEventListener("click", () => digCell(index));
+        mapGridEl.appendChild(div);
+      });
+    }
+
+    function renderRaidLoot() {
+      raidLootListEl.innerHTML = "";
+
+      if (state.raidLoot.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "当前没有临时战利品。";
+        raidLootListEl.appendChild(empty);
+        return;
+      }
+
+      state.raidLoot.forEach(item => {
+        const rarityInfo = rarityConfig[item.rarity];
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div class="item-left">
+            <div class="item-name ${rarityInfo.className}">${item.name}</div>
+            <div class="item-meta">${rarityInfo.label} · 预估价值 ￥${formatMoney(item.value)}</div>
+          </div>
+          <div class="${rarityInfo.className}">已获取</div>
+        `;
+        raidLootListEl.appendChild(div);
+      });
+    }
+
+    function renderInventory() {
+      inventoryListEl.innerHTML = "";
+
+      if (state.inventory.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "背包空空如也，快去挖宝吧。";
+        inventoryListEl.appendChild(empty);
+        return;
+      }
+
+      state.inventory.forEach(item => {
+        const rarityInfo = rarityConfig[item.rarity];
+        const div = document.createElement("div");
+        div.className = "item";
+
+        const left = document.createElement("div");
+        left.className = "item-left";
+        left.innerHTML = `
+          <div class="item-name ${rarityInfo.className}">${item.name}</div>
+          <div class="item-meta">${rarityInfo.label} · 出售价 ￥${formatMoney(item.value)}</div>
+        `;
+
+        const sellBtn = document.createElement("button");
+        sellBtn.className = "btn-success";
+        sellBtn.textContent = "出售";
+        sellBtn.addEventListener("click", () => sellInventoryItem(item.id));
+
+        div.appendChild(left);
+        div.appendChild(sellBtn);
+        inventoryListEl.appendChild(div);
+      });
+    }
+
+    function render() {
+      renderTopBar();
+      renderMap();
+      renderRaidLoot();
+      renderInventory();
+    }
+
+    enterMapBtn.addEventListener("click", enterMap);
+    extractBtn.addEventListener("click", extractLoot);
+    buyTicketBtn.addEventListener("click", buyTicket);
+    resetDataBtn.addEventListener("click", resetData);
+
+    loadGame();
+    render();
+    addLog("欢迎来到挖宝行动。祝你今天一把出金。");
+  </script>
+</body>
+</html>
