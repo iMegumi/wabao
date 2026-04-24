@@ -358,8 +358,8 @@
   <script>
     const STORAGE_KEY = "dig_treasure_game_save_v2";
     const TICKET_PRICE = 800;
-    const MAP_COLS = 10;
-    const MAP_ROWS = 8;
+    const MAP_COLS = 12;
+    const MAP_ROWS = 10;
 
     const rarityConfig = {
       common: {
@@ -420,6 +420,7 @@
       { name: "机密原型芯片", rarity: "legendary", size: [2,3], value: 4200 },
 
       { name: "绝密数据容器", rarity: "red", size: [3,2], value: 7000 },
+      { name: "绝密服务器", rarity: "red", size: [3,3], value: 9000 },
       { name: "红级军工箱", rarity: "red", size: [2,2], value: 8800 }
     ];
 
@@ -498,7 +499,7 @@
       const roll = Math.random();
 
       if (roll < 0.65) {
-        return randomInt(850, 1400);
+        return randomInt(750, 1200);
       }
       if (roll < 0.85) {
         return randomInt(400, 850);
